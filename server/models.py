@@ -55,19 +55,43 @@ class Worker(db.Model):
             }
             for job in self.approved_jobs
         ]
+        
+   
 
         # Filter offered jobs that haven't been approved or bid for
-        not_approved_or_bidded_jobs = [
+        # not_approved_or_bidded_jobs = [
+        #     {
+        #         'id': job.id,
+        #         'title': job.title,
+        #         'wage': job.wage,
+        #         'hours': job.hours,
+        #     }
+        #     for job in OfferedJob.query.filter(
+        #         ~OfferedJob.approved_job,  # Exclude approved jobs the worker has already bid for
+        #         ~OfferedJob.id.in_([bid.offered_job_id for bid in self.bids])  # Exclude jobs the worker has already bid for
+        #     ).all()
+        # ]
+
+        not_approved_or_bidded_jobs = OfferedJob.query.filter(
+            ~OfferedJob.id.in_(
+                db.session.query(ApprovedJob.offered_job_id)
+            ),
+            ~OfferedJob.id.in_(
+                db.session.query(Bid.offered_job_id).filter(Bid.worker_id == self.id)
+        )
+        ).all()
+
+        not_approved_or_bidded_jobs_data = [
             {
                 'id': job.id,
                 'title': job.title,
                 'wage': job.wage,
                 'hours': job.hours,
             }
-            for job in OfferedJob.query.all()
-            if job not in [approved_job.offered_job for approved_job in self.approved_jobs]
-               and job not in [bid.offered_job for bid in self.bids]
+            for job in not_approved_or_bidded_jobs
         ]
+
+
 
         bids = [
             {
@@ -83,7 +107,7 @@ class Worker(db.Model):
             'approved_jobs_total_amount' : "${:,.2f}".format(total_approved_amount ),
             'completed_jobs' : completed_jobs,
             'approved_jobs': approved_jobs,
-            'new_jobs' : not_approved_or_bidded_jobs,
+            'new_jobs' : not_approved_or_bidded_jobs_data,
             'bids': bids,
         }
 
