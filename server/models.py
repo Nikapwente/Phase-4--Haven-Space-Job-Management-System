@@ -31,6 +31,7 @@ class Worker(db.Model):
                 'paid': job.completed_job.paid,
                 'rating': job.completed_job.rating,
                 'certificate': job.completed_job.certificate,
+                'amount': job.amount,
             }
             for job in self.approved_jobs
             if job.completed_job
@@ -55,22 +56,6 @@ class Worker(db.Model):
             }
             for job in self.approved_jobs
         ]
-        
-   
-
-        # Filter offered jobs that haven't been approved or bid for
-        # not_approved_or_bidded_jobs = [
-        #     {
-        #         'id': job.id,
-        #         'title': job.title,
-        #         'wage': job.wage,
-        #         'hours': job.hours,
-        #     }
-        #     for job in OfferedJob.query.filter(
-        #         ~OfferedJob.approved_job,  # Exclude approved jobs the worker has already bid for
-        #         ~OfferedJob.id.in_([bid.offered_job_id for bid in self.bids])  # Exclude jobs the worker has already bid for
-        #     ).all()
-        # ]
 
         not_approved_or_bidded_jobs = OfferedJob.query.filter(
             ~OfferedJob.id.in_(
@@ -97,8 +82,23 @@ class Worker(db.Model):
             {
                 'id': bid.id,
                 'amount': bid.amount,
+                'offered_job_title': bid.offered_job.title,
+                'offered_job_hours': bid.offered_job.hours,
+                'offered_job_wage': bid.offered_job.wage,
             }
             for bid in self.bids
+        ]
+
+        active_bids = [
+            {
+                'id': bid.id,
+                'amount': bid.amount,
+                'offered_job_title': bid.offered_job.title,
+                'offered_job_hours': bid.offered_job.hours,
+                'offered_job_wage': bid.offered_job.wage,
+            }
+            for bid in self.bids
+            if not bid.offered_job.approved_job
         ]
 
         return {
@@ -109,6 +109,7 @@ class Worker(db.Model):
             'approved_jobs': approved_jobs,
             'new_jobs' : not_approved_or_bidded_jobs_data,
             'bids': bids,
+            'active_bids': active_bids,
         }
 
     def __repr__(self):

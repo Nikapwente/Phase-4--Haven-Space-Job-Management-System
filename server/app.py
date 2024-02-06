@@ -35,7 +35,16 @@ class RegisterWorker(Resource):
 
 class AllWorkers(Resource):
     def post(self):
-        # data = request.get_json()
+        
+        # Get form data
+        email = request.form.get('email')
+
+        # Check if user with the given email already exists
+        existing_worker = Worker.query.filter(Worker.email == email).first()
+        if existing_worker:
+            return make_response(jsonify({"Error": f"Email account {email} already exists"}), 409)
+
+        # If the email is unique, proceed with creating the new user
         new_worker = Worker(first_name=request.form.get('first_name'),
                           last_name=request.form.get('last_name'),
                           phone=request.form.get('phone'),
@@ -56,7 +65,7 @@ class AllWorkers(Resource):
         session["worker_id"] = new_worker.id
 
         # return make_response(jsonify(new_worker.to_dict()), 201)
-        return make_response(jsonify({"Message": f"New user with email, {new_worker.email}, successfully registered."}), 409)
+        return make_response(jsonify({"Message": f"New user with email, {new_worker.email}, successfully registered."}), 201)
 
 
     def get(self):
@@ -73,6 +82,7 @@ class AllWorkers(Resource):
             "completed_jobs": worker.get_details()['completed_jobs'],
             "approved_jobs": worker.get_details()['approved_jobs'],
             "bids": worker.get_details()['bids'],
+            
         }
             for worker in workers
         ]
@@ -124,6 +134,7 @@ class LoginUser(Resource):
             "approved_jobs": worker.get_details()['approved_jobs'],
             "bids": worker.get_details()['bids'],
             "new_jobs": worker.get_details()['new_jobs'],
+             "active_bids": worker.get_details()['active_bids'],           
             }), 200)
         
     def delete(self):
@@ -175,6 +186,43 @@ class ApprovedJobs(Resource):
         ]
         return make_response(jsonify(approved_jobs_list))
 
+class ApprovedJobById(Resource):
+    def get(self, id):
+        approved_job = ApprovedJob.query.get(id)
+
+        if approved_job is None:
+            return make_response(jsonify({"error": "Approved job not found"}), 404)
+
+        approved_job_data = {
+            "id": approved_job.id,
+            "title": approved_job.offered_job.title,
+            "amount": approved_job.amount,
+            "progress": approved_job.progress,
+            "hours": approved_job.hours,
+        }
+        return make_response(jsonify(approved_job_data))
+
+    def put(self, id):
+        data = request.get_json()
+        if 'progress' not in data:
+            return make_response(jsonify({"error": "Progress not provided"}), 400)
+
+        approved_job = ApprovedJob.query.get(id)
+        if approved_job is None:
+            return make_response(jsonify({"error": "Approved job not found"}), 404)
+
+        try:
+            new_progress = int(data['progress'])
+            if new_progress < 0 or new_progress > 100:
+                return make_response(jsonify({"error": "Progress must be between 0 and 100"}), 400)
+            approved_job.progress = new_progress
+            db.session.commit()
+            return make_response(jsonify({"message": "Progress updated successfully"}), 200)
+        except ValueError:
+            return make_response(jsonify({"error": "Invalid progress value"}), 400)
+
+
+
 class Bids(Resource):
     def get(self):
         bids_list = Bid.query.all()
@@ -214,6 +262,7 @@ api.add_resource(AllWorkers, '/workers')
 api.add_resource(WorkerById, '/workers/<int:id>')
 api.add_resource(OfferedJobs, '/offered_jobs')
 api.add_resource(ApprovedJobs, '/approved_jobs')
+api.add_resource(ApprovedJobById, '/approved_jobs/<int:id>')
 api.add_resource(CompletedJobs, '/completed_jobs')
 api.add_resource(Bids, '/bids')
 api.add_resource(LoginUser, '/login')
