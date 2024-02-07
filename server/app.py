@@ -106,6 +106,8 @@ class WorkerById(Resource):
             "completed_jobs": worker.get_details()['completed_jobs'],
             "approved_jobs": worker.get_details()['approved_jobs'],
             "bids": worker.get_details()['bids'],
+            "new_jobs": worker.get_details()['new_jobs'],
+            "active_bids": worker.get_details()['active_bids'],
         }
         return make_response(jsonify(worker_data))
 
@@ -233,11 +235,67 @@ class Bids(Resource):
                 "worker_id": bid.worker.id,
                 "worker_name": f"{bid.worker.first_name} {bid.worker.last_name}",
                 "offered_job_title": bid.offered_job.title,
+                "worker_avg_rating": bid.worker.get_details()['completed_jobs_average_rating'] 
             }
             for bid in bids_list
         ]
         return make_response(jsonify(bids_list))
+
+
+class UnapprovedBids(Resource):
+    def get(self):
+        # unapproved_bids = Bid.query.filter(Bid.offered_job.has(ApprovedJob.id.is_(None))).all()
+        # unapproved_bids = Bid.query.join(Bid.offered_job).filter(~OfferedJob.approved_job.any()).all()
+        unapproved_bids = Bid.query.join(Bid.offered_job).filter(~OfferedJob.approved_job.has()).all()
+
+        unapproved_bids_list = [
+            {
+                "id": bid.id,
+                "amount": bid.amount,
+                "worker_id": bid.worker.id,
+                "worker_name": f"{bid.worker.first_name} {bid.worker.last_name}",
+                "offered_job_title": bid.offered_job.title,
+                "offered_amount": bid.offered_job.wage,
+                "worker_avg_rating": bid.worker.get_details()['completed_jobs_average_rating'] 
+            }
+            for bid in unapproved_bids
+        ]
+        return make_response(jsonify(unapproved_bids_list))
+
     
+class BidById(Resource):
+    def get(self, id):
+        bid = Bid.query.get(id)
+
+        if bid is None:
+            return make_response(jsonify({"error": "Bid not found"}), 404)
+
+        bid_data = {
+            "id": bid.id,
+                "amount": bid.amount,
+                "worker_id": bid.worker.id,
+                "worker_name": f"{bid.worker.first_name} {bid.worker.last_name}",
+                "offered_job_title": bid.offered_job.title,
+                "worker_avg_rating": bid.worker.get_details()['completed_jobs_average_rating'] 
+        }
+        return make_response(jsonify(bid_data))
+    
+    def post(self, id):
+        data = request.get_json()
+        amount = data.get('amount')
+        worker_id = data.get('worker_id')
+        offered_job_id = data.get('offered_job_id')
+        
+        new_bid = Bid(amount=amount, worker_id=worker_id, offered_job_id=offered_job_id)
+
+        db.session.add(new_bid)
+        db.session.commit()
+
+        return make_response(jsonify({"message": "Bid placed successfully!"}), 201)
+
+
+
+
 class CompletedJobs(Resource):
     def get(self):
         completed_jobs = CompletedJob.query.all()
@@ -265,6 +323,8 @@ api.add_resource(ApprovedJobs, '/approved_jobs')
 api.add_resource(ApprovedJobById, '/approved_jobs/<int:id>')
 api.add_resource(CompletedJobs, '/completed_jobs')
 api.add_resource(Bids, '/bids')
+api.add_resource(UnapprovedBids, '/unapproved_bids')
+api.add_resource(BidById, '/bids/<int:id>')
 api.add_resource(LoginUser, '/login')
 
 

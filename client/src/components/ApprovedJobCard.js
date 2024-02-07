@@ -1,9 +1,10 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 
 
 function ApprovedJobCard({ id, hours, progress, amount, title }) {
 
     const [newProgress, setNewProgress] = useState(progress);
+    
 
     const handleProgressUpdate = async () => {
         try {
@@ -17,7 +18,9 @@ function ApprovedJobCard({ id, hours, progress, amount, title }) {
 
             if (response.ok) {
                 console.log('Progress updated successfully!');
+                alert('Updated Successfully!');
                 // Success Logic
+                
                 const storedSelectedUser = sessionStorage.getItem('selectedUser');
                 const activeUser = JSON.parse(storedSelectedUser);
                 const updatedApprovedJobs = activeUser.approved_jobs.map(job => {

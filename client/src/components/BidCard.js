@@ -1,6 +1,6 @@
 import React from "react";
 
-function BidCard({ id, hours, amount, title }) {
+function BidCard({ id, hours, offered_amount, title, bid_amount }) {
 
     return (
         <>
@@ -9,7 +9,8 @@ function BidCard({ id, hours, amount, title }) {
                     <h5 className="card-title">{title}</h5>
                     <p className="card-text">ID: {id}</p>
                     <p className="card-text">Hours: {hours}</p>
-                    <p className="card-text">Amount: $ {amount}.00</p>
+                    <p className="card-text">Offered Amount: $ {offered_amount}.00</p>
+                    <p className="card-text">Bid Amount: $ {bid_amount}.00</p>
                 </div>
             </div>
         </>

@@ -1,17 +1,37 @@
 import React from "react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ApprovedJobCard from "./ApprovedJobCard";
 import NewJobCard from "./NewJobCard";
 import CompletedJobCard from "./CompletedJobCard";
 import BidCard from "./BidCard";
+import Table from "./Table";
 
 
 function Home({ selectedUser }) {
 
     const [selectedItem, setSelectedItem] = useState('');
 
+    const [data, setData] = useState(null);
+    const [counter, setCounter] = useState(0);
+    const [bidData, setBidData] = useState([]);
+
+
     const storedSelectedUser = sessionStorage.getItem('selectedUser');
     const activeUser = JSON.parse(storedSelectedUser);
+
+    useEffect(() => {
+        fetch(`/workers/${activeUser.id}`)
+            .then(resp => resp.json())
+            .then(data => { setData(data); })
+    }, [counter,activeUser.id])
+
+
+    useEffect(() => {
+        fetch(`/unapproved_bids`)
+            .then(resp => resp.json())
+            .then(data => { setBidData(data); })
+    }, [counter])
+
 
     const handleItemClick = (item) => {
         setSelectedItem(item);
@@ -20,7 +40,7 @@ function Home({ selectedUser }) {
         console.log(activeUser.title);
     };
 
-    
+
 
     return (
 
@@ -33,15 +53,15 @@ function Home({ selectedUser }) {
                             {/* left column */}
 
                             <div className="ms-5 mt-5 col-4" style={{ "width": "250px" }}>
-                                
+
                                 <h4>{activeUser.name}, {activeUser.title}</h4>
                                 <div className="list-group" style={{ "width": "250px" }}>
                                     <a
                                         href="#"
-                                        className={`list-group-item list-group-item-action ${selectedItem === 'New Jobs' && 'active'}`}
-                                        onClick={() => handleItemClick('New Jobs')}
+                                        className={`list-group-item list-group-item-action ${selectedItem === 'Available Jobs' && 'active'}`}
+                                        onClick={() => handleItemClick('Available Jobs')}
                                     >
-                                        New Jobs
+                                        Available Jobs
                                     </a>
                                     <a
                                         href="#"
@@ -65,14 +85,24 @@ function Home({ selectedUser }) {
                                         Bids
                                     </a>
                                     {activeUser.title === 'contractor' && (
-                                    <a
-                                        href="#"
-                                        className={`list-group-item list-group-item-action ${selectedItem === 'Active Bids' && 'active'}`}
-                                        onClick={() => handleItemClick('Active Bids')}
-                                    >
-                                        Active Bids
-                                    </a>
+                                        <a
+                                            href="#"
+                                            className={`list-group-item list-group-item-action ${selectedItem === 'Active Bids' && 'active'}`}
+                                            onClick={() => handleItemClick('Active Bids')}
+                                        >
+                                            Active Bids
+                                        </a>
                                     )}
+                                    {activeUser.title === 'personnel manager' && (
+                                        <a
+                                            href="#"
+                                            className={`list-group-item list-group-item-action ${selectedItem === 'Approve Bids' && 'active'}`}
+                                            onClick={() => handleItemClick('Approve Bids')}
+                                        >
+                                            Approve Bids
+                                        </a>
+                                    )}
+
                                     <a
                                         href="#"
                                         className={`list-group-item list-group-item-action ${selectedItem === 'Settings' && 'active'}`}
@@ -101,12 +131,13 @@ function Home({ selectedUser }) {
                                             hours={item.hours}
                                             progress={item.progress}
                                             title={item.title}
-                                            
+                                            userId={activeUser.id}
+
                                         />
                                     })}
                                 </div>
                             )}
-                            {selectedItem === 'New Jobs' && (
+                            {selectedItem === 'Available Jobs' && (
                                 <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
                                     {activeUser.new_jobs.map((item) => {
                                         return <NewJobCard
@@ -115,6 +146,8 @@ function Home({ selectedUser }) {
                                             amount={item.wage}
                                             hours={item.hours}
                                             title={item.title}
+                                            userId={activeUser.id}
+                                            update={setCounter}
                                         />
                                     })}
                                 </div>
@@ -135,28 +168,36 @@ function Home({ selectedUser }) {
                             )}
                             {selectedItem === 'Bids' && (
                                 <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
-                                    {activeUser.bids.map((item) => {
+                                    {data.bids.map((item) => {
                                         return <BidCard
                                             key={item.id}
                                             id={item.id}
-                                            amount={item.offered_job_wage}
+                                            offered_amount={item.offered_job_wage}
                                             hours={item.offered_job_hours}
                                             title={item.offered_job_title}
+                                            bid_amount={item.amount}
                                         />
                                     })}
                                 </div>
                             )}
                             {selectedItem === 'Active Bids' && (
                                 <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
-                                    {activeUser.active_bids.map((item) => {
+                                    {data.active_bids.map((item) => {
                                         return <BidCard
                                             key={item.id}
                                             id={item.id}
-                                            amount={item.offered_job_wage}
+                                            offered_amount={item.offered_job_wage}
                                             hours={item.offered_job_hours}
                                             title={item.offered_job_title}
+                                            bid_amount={item.amount}
                                         />
                                     })}
+                                </div>
+                            )}
+
+                            {selectedItem === 'Approve Bids' && (
+                                <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
+                                    <Table bidData={bidData}/>
                                 </div>
                             )}
 
