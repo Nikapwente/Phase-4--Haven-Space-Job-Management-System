@@ -1,7 +1,7 @@
 import React from "react";
 import TableEntry from "./TableEntry";
 
-function Table({ bidData }) {
+function Table({ bidData, update }) {
 
     return (
         <>
@@ -27,6 +27,8 @@ function Table({ bidData }) {
                             amount={item.amount}
                             contractor={item.worker_name}
                             contractor_rating={item.worker_avg_rating}
+                            bidData={bidData}
+                            update={update}
                         />
                     })}
                 </tbody>

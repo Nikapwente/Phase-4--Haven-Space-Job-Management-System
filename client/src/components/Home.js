@@ -5,6 +5,7 @@ import NewJobCard from "./NewJobCard";
 import CompletedJobCard from "./CompletedJobCard";
 import BidCard from "./BidCard";
 import Table from "./Table";
+import ProfileCard from "./ProfileCard";
 
 
 function Home({ selectedUser }) {
@@ -23,7 +24,7 @@ function Home({ selectedUser }) {
         fetch(`/workers/${activeUser.id}`)
             .then(resp => resp.json())
             .then(data => { setData(data); })
-    }, [counter,activeUser.id])
+    }, [counter, activeUser.id])
 
 
     useEffect(() => {
@@ -35,11 +36,34 @@ function Home({ selectedUser }) {
 
     const handleItemClick = (item) => {
         setSelectedItem(item);
-        // You can add additional logic or navigation here
         // console.log(selectedUser);
-        console.log(activeUser.title);
+        console.log(activeUser);
+        console.log(data);
     };
 
+    const handleUpdateProfile = (updatedData) => {
+        // Send updated profile data to the backend
+        fetch(`/workers/${activeUser.id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedData),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update profile');
+                }
+                // If update successful, trigger a counter to refresh the data
+                setCounter(counter + 1);
+                alert('Updated successfull!');
+            })
+            .catch(error => {
+                console.error('Error updating profile:', error);
+                
+            });
+    };
+ 
 
 
     return (
@@ -105,10 +129,10 @@ function Home({ selectedUser }) {
 
                                     <a
                                         href="#"
-                                        className={`list-group-item list-group-item-action ${selectedItem === 'Settings' && 'active'}`}
-                                        onClick={() => handleItemClick('Settings')}
+                                        className={`list-group-item list-group-item-action ${selectedItem === 'Your Profile' && 'active'}`}
+                                        onClick={() => handleItemClick('Your Profile')}
                                     >
-                                        Settings
+                                        Your Profile
                                     </a>
                                     <a
                                         href="/login"
@@ -197,7 +221,13 @@ function Home({ selectedUser }) {
 
                             {selectedItem === 'Approve Bids' && (
                                 <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
-                                    <Table bidData={bidData}/>
+                                    <Table bidData={bidData} update={setCounter} />
+                                </div>
+                            )}
+
+                            {selectedItem === 'Your Profile' && (
+                                <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
+                                    <ProfileCard userData={data} onUpdate={handleUpdateProfile}/>
                                 </div>
                             )}
 

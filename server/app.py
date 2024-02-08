@@ -101,6 +101,10 @@ class WorkerById(Resource):
             "last_name": worker.last_name,
             "email": worker.email,
             "title": worker.title,
+            "phone": worker.phone,
+            "image": worker.image,
+            "about": worker.about,
+            "location": worker.location,
             "completed_jobs_average_rating": worker.get_details()['completed_jobs_average_rating'],
             "approved_jobs_total_amount": worker.get_details()['approved_jobs_total_amount'],
             "completed_jobs": worker.get_details()['completed_jobs'],
@@ -110,6 +114,45 @@ class WorkerById(Resource):
             "active_bids": worker.get_details()['active_bids'],
         }
         return make_response(jsonify(worker_data))
+    
+    def patch(self, id):
+        data = request.get_json()
+
+        worker = Worker.query.get(id)
+
+        if worker is None:
+            return make_response(jsonify({"error": "Worker not found"}), 404)
+
+        if 'about' in data:
+            worker.about = data['about']
+        if 'location' in data:
+            worker.location = data['location']
+        if 'phone' in data:
+            worker.phone = data['phone']
+        if 'image' in data:
+            worker.image = data['image']
+
+        db.session.commit()
+
+        updated_worker_data = {
+            "id": worker.id,
+            "first_name": worker.first_name,
+            "last_name": worker.last_name,
+            "email": worker.email,
+            "title": worker.title,
+            "phone": worker.phone,
+            "image": worker.image,
+            "about": worker.about,
+            "location": worker.location,
+            "completed_jobs_average_rating": worker.get_details()['completed_jobs_average_rating'],
+            "approved_jobs_total_amount": worker.get_details()['approved_jobs_total_amount'],
+            "completed_jobs": worker.get_details()['completed_jobs'],
+            "approved_jobs": worker.get_details()['approved_jobs'],
+            "bids": worker.get_details()['bids'],
+            "new_jobs": worker.get_details()['new_jobs'],
+            "active_bids": worker.get_details()['active_bids'],
+        }
+        return make_response(jsonify(updated_worker_data), 200)
 
 class LoginUser(Resource):
     def post(self):
@@ -187,6 +230,22 @@ class ApprovedJobs(Resource):
             for job in approved_jobs
         ]
         return make_response(jsonify(approved_jobs_list))
+    
+    def post(self):
+        pass
+        data = request.get_json()
+
+        new_approved_job = ApprovedJob(
+            amount = data['amount'],
+            worker_id = data['worker_id'],
+            offered_job_id = data['offered_job_id'],
+            hours = data['hours']
+        )
+
+        db.session.add(new_approved_job)
+        db.session.commit()
+
+        return make_response(new_approved_job.to_dict(), 201)
 
 class ApprovedJobById(Resource):
     def get(self, id):
@@ -256,7 +315,9 @@ class UnapprovedBids(Resource):
                 "worker_name": f"{bid.worker.first_name} {bid.worker.last_name}",
                 "offered_job_title": bid.offered_job.title,
                 "offered_amount": bid.offered_job.wage,
-                "worker_avg_rating": bid.worker.get_details()['completed_jobs_average_rating'] 
+                "worker_avg_rating": bid.worker.get_details()['completed_jobs_average_rating'],
+                "offered_job_id":bid.offered_job_id,
+                "hours":bid.offered_job.hours,
             }
             for bid in unapproved_bids
         ]

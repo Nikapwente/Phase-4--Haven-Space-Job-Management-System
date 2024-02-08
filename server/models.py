@@ -3,7 +3,7 @@ from sqlalchemy_serializer import SerializerMixin
 
 db=SQLAlchemy()
 
-class Worker(db.Model):
+class Worker(db.Model, SerializerMixin):
     __tablename__= 'workers'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -130,7 +130,7 @@ class Worker(db.Model):
 
 
 
-class CompletedJob(db.Model):
+class CompletedJob(db.Model, SerializerMixin):
     __tablename__ = 'completed_jobs'
     id = db.Column(db.Integer, primary_key=True)
     paid = db.Column(db.Boolean)
@@ -159,8 +159,18 @@ class ApprovedJob(db.Model):
 
     def __repr__(self):
         return f'<Approved job {self.id}, {self.amount}, {self.hours}, {self.progress} >'
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "offered_job_title": self.offered_job.title,
+            "amount": self.amount,
+            "progress": self.progress,
+            "hours": self.hours,
+            
+        }
 
-class Bid(db.Model):
+class Bid(db.Model, SerializerMixin):
     __tablename__ = 'bids'
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float)
@@ -171,7 +181,7 @@ class Bid(db.Model):
     def __repr__(self):
         return f'<Bid {self.id}, {self.amount} >'
 
-class OfferedJob(db.Model):
+class OfferedJob(db.Model, SerializerMixin):
     __tablename__ = 'offered_jobs'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
