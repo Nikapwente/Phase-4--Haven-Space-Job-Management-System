@@ -3,6 +3,7 @@ import Login from './components/Login'
 import Home from './components/Home'
 import { useState } from 'react';
 import SignUp from './components/SignUp';
+import Navbar from './components/NavBar';
 
 function App() {
 
@@ -16,10 +17,11 @@ function App() {
   
 
   return (
+
     <Router >
       <div>
+        <Navbar />
         <div className="contaniner d-flex flex-column">
-          {/* <NavBar /> */}
           <Routes >
             <Route path="/" element={<Login onLogin={handleLogin}/>} />
             <Route path="/login" element={<Login onLogin={handleLogin}/>} />

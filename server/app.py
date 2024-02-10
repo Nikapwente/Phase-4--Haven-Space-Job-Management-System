@@ -1,11 +1,14 @@
-from flask import Flask, jsonify, request, make_response, session
+from flask import Flask, jsonify, flash, request, make_response, session
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from models import db, Worker, OfferedJob, CompletedJob, ApprovedJob, Bid
 from flask_bcrypt import Bcrypt
 import os
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 
+# UPLOAD_FOLDER = "assets/images/"
+UPLOAD_FOLDER = "../client/public/images/"
 
 #Create an Instance
 app = Flask(__name__)
@@ -17,12 +20,18 @@ app.secret_key = secret_key
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///haven.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.json.compact = False
+
+ALLOWED_EXTENSIONS = set(['png','jpg','jpeg','gif'])
 
 #Create Migrations
 migrate = Migrate(app, db)
 
 db.init_app(app)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 class Index(Resource):
     def get(self):
@@ -117,7 +126,7 @@ class WorkerById(Resource):
     
     def patch(self, id):
         data = request.get_json()
-
+        
         worker = Worker.query.get(id)
 
         if worker is None:
@@ -129,9 +138,11 @@ class WorkerById(Resource):
             worker.location = data['location']
         if 'phone' in data:
             worker.phone = data['phone']
-        if 'image' in data:
-            worker.image = data['image']
 
+
+        
+
+        db.session.add(worker)
         db.session.commit()
 
         updated_worker_data = {
@@ -153,6 +164,35 @@ class WorkerById(Resource):
             "active_bids": worker.get_details()['active_bids'],
         }
         return make_response(jsonify(updated_worker_data), 200)
+
+    def post(self, id):
+        # Handle image upload
+        worker = Worker.query.get(id)
+        image_file = request.files['image']
+
+        if 'image' not in request.files:
+            flash('No file...')
+            return make_response(jsonify({"error": "Worker not found"}), 404)
+
+        if image_file.filename == '':
+            flash('No image selected')
+            return make_response(jsonify({"error": "No file selected"}), 404)
+
+        if image_file and allowed_file(image_file.filename):
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_file.save(image_path)
+            worker.image = image_path
+
+            updated_worker = {"image": worker.image}
+
+            
+            db.session.commit()
+
+        return make_response(jsonify(updated_worker), 200)
+
+
+
 
 class LoginUser(Resource):
     def post(self):
@@ -303,8 +343,6 @@ class Bids(Resource):
 
 class UnapprovedBids(Resource):
     def get(self):
-        # unapproved_bids = Bid.query.filter(Bid.offered_job.has(ApprovedJob.id.is_(None))).all()
-        # unapproved_bids = Bid.query.join(Bid.offered_job).filter(~OfferedJob.approved_job.any()).all()
         unapproved_bids = Bid.query.join(Bid.offered_job).filter(~OfferedJob.approved_job.has()).all()
 
         unapproved_bids_list = [
@@ -353,6 +391,16 @@ class BidById(Resource):
         db.session.commit()
 
         return make_response(jsonify({"message": "Bid placed successfully!"}), 201)
+    
+    def delete(self, id): 
+        bid = Bid.query.get(id)
+        if bid is None:
+            return {'error': 'Bid not found'}, 404
+
+        db.session.delete(bid)
+        db.session.commit()
+
+        return {}, 204
 
 
 

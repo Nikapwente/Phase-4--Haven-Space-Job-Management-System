@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import ApprovedJobCard from "./ApprovedJobCard";
 import NewJobCard from "./NewJobCard";
 import CompletedJobCard from "./CompletedJobCard";
+import UnapprovedBidCard from "./UnapprovedBidCard";
 import BidCard from "./BidCard";
 import Table from "./Table";
 import ProfileCard from "./ProfileCard";
@@ -42,6 +43,7 @@ function Home({ selectedUser }) {
     };
 
     const handleUpdateProfile = (updatedData) => {
+        
         // Send updated profile data to the backend
         fetch(`/workers/${activeUser.id}`, {
             method: 'PATCH',
@@ -54,7 +56,9 @@ function Home({ selectedUser }) {
                 if (!response.ok) {
                     throw new Error('Failed to update profile');
                 }
+                
                 // If update successful, trigger a counter to refresh the data
+                console.log(updatedData);
                 setCounter(counter + 1);
                 alert('Updated successfull!');
             })
@@ -207,13 +211,14 @@ function Home({ selectedUser }) {
                             {selectedItem === 'Active Bids' && (
                                 <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
                                     {data.active_bids.map((item) => {
-                                        return <BidCard
+                                        return <UnapprovedBidCard
                                             key={item.id}
                                             id={item.id}
                                             offered_amount={item.offered_job_wage}
                                             hours={item.offered_job_hours}
                                             title={item.offered_job_title}
                                             bid_amount={item.amount}
+                                            update={setCounter}
                                         />
                                     })}
                                 </div>
@@ -227,7 +232,7 @@ function Home({ selectedUser }) {
 
                             {selectedItem === 'Your Profile' && (
                                 <div className="ms-5 col-4 d-flex align-content-end flex-wrap" style={{ "width": "1000px" }}>
-                                    <ProfileCard userData={data} onUpdate={handleUpdateProfile}/>
+                                    <ProfileCard userData={data} onUpdate={handleUpdateProfile} />
                                 </div>
                             )}
 

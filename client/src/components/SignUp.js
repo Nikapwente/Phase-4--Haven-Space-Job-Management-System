@@ -45,6 +45,7 @@ function SignUp() {
             } else {
                 const data = await response.json();
                 console.error('Sign-up failed:', data.Error);
+                alert('Sign Up failed, Email exists!');
                 // Handle failed sign-up (e.g., display error message)
             }
         } catch (error) {
