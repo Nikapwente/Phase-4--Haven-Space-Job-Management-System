@@ -4,6 +4,7 @@ import Home from './components/Home'
 import { useState } from 'react';
 import SignUp from './components/SignUp';
 import Navbar from './components/NavBar';
+import Footer from './Footer';
 
 function App() {
 
@@ -14,24 +15,25 @@ function App() {
     setUserData(data);
   };
 
-  
+
 
   return (
 
-    <Router >
-      <div>
+    <div style={{ backgroundColor: '#e6f4f0' }}>
+      <Router>
         <Navbar />
-        <div className="contaniner d-flex flex-column">
-          <Routes >
-            <Route path="/" element={<Login onLogin={handleLogin}/>} />
-            <Route path="/login" element={<Login onLogin={handleLogin}/>} />
-            <Route path="/home" element={<Home selectedUser={userData}/>} />
-            <Route path="/signup" element={<SignUp selectedUser={userData}/>} />
+        <div>
+          <Routes>
+            <Route path="/" element={<Login onLogin={handleLogin} />} />
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="/home" element={<Home selectedUser={userData} />} />
+            <Route path="/signup" element={<SignUp selectedUser={userData} />} />
           </Routes>
-          {/* <Footer /> */}
+          <Footer />
         </div>
-      </div>
-    </Router>
+      </Router>
+    </div>
+
   );
 
 

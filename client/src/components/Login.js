@@ -30,13 +30,16 @@ function Login({ onLogin }) {
                 const data = await response.json();
                 onLogin(data); // Pass user data to the callback function
                 // test
+
                 sessionStorage.setItem('selectedUser', JSON.stringify(data));
                 // sessionStorage.setItem('selectedUser', data);
                 console.log(data)
+                alert('Login Successfull!');
                 navigate('/home');
             } else {
                 const data = await response.json();
                 console.error('Login failed:', data.Error);
+                alert(`Login failed, ${data.Error}`);
                 // Failed Login Action
             }
         } catch (error) {
@@ -46,23 +49,25 @@ function Login({ onLogin }) {
 
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div className="mb-3 ms-5" style={{ "width": "400px" }}>
-                <div className="mb-3">
-                    <label htmlFor="email" className="form-label">Email address</label>
-                    <input type="email" className="form-control" id="email" aria-describedby="emailHelp" value={email} onChange={(event) => setEmail(event.target.value)} />
-                    <div id="emailHelp" className="form-text">We'll never share your email with anyone else.</div>
+        <div style={{"height":"700px"}}>
+            <form onSubmit={handleSubmit}>
+                <div className="mb-3 ms-5" style={{ "width": "400px" }}>
+                    <div className="mb-3">
+                        <label htmlFor="email" className="form-label">Email address</label>
+                        <input type="email" className="form-control" id="email" aria-describedby="emailHelp" value={email} onChange={(event) => setEmail(event.target.value)} />
+                        <div id="emailHelp" className="form-text">We'll never share your email with anyone else.</div>
+                    </div>
+                    <div className="mb-3">
+                        <label htmlFor="password" className="form-label">Password</label>
+                        <input type="password" className="form-control" id="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+                    </div>
+                    <div className="mb-3">
+                        <p><a className="link-opacity-100" href="/signup">Sign Up?</a></p>
+                    </div>
+                    <button type="submit" className="btn btn-primary">Sign In</button>
                 </div>
-                <div className="mb-3">
-                    <label htmlFor="password" className="form-label">Password</label>
-                    <input type="password" className="form-control" id="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-                </div>
-                <div className="mb-3">
-                    <p><a className="link-opacity-100" href="/signup">Sign Up?</a></p>
-                </div>
-                <button type="submit" className="btn btn-primary">Submit</button>
-            </div>
-        </form>
+            </form>
+        </div>
 
     );
 }

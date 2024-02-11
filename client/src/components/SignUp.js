@@ -30,6 +30,27 @@ function SignUp() {
     const handleSubmit = async (event) => {
         event.preventDefault();
 
+        // Check if all fields are filled
+        for (let key in formData) {
+            if (formData[key] === "") {
+                alert(`Please input ${key}`);
+                return;
+            }
+        }
+
+        // Check if phone is 10 digits
+        if (formData.phone.length !== 10) {
+            alert('Phone number should be 10 digits!');
+            return;
+        }
+
+        // Check if passwords match
+        if (formData.password !== confirmPassword) {
+            alert('Passwords do not match!');
+            return;
+        }
+
+
         try {
             const response = await fetch('/workers', {
                 method: 'POST',
@@ -41,6 +62,7 @@ function SignUp() {
 
             if (response.ok) {
                 console.log('Sign-up successful!');
+                alert('Sign-up successful!!');
                 navigate('/login'); // Redirect to login page after successful sign-up
             } else {
                 const data = await response.json();

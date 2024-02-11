@@ -6,6 +6,7 @@ from flask_bcrypt import Bcrypt
 import os
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from faker import Faker
 
 # UPLOAD_FOLDER = "assets/images/"
 UPLOAD_FOLDER = "../client/public/images/"
@@ -17,6 +18,7 @@ bcrypt = Bcrypt(app)
 CORS(app)
 secret_key = os.urandom(24)
 app.secret_key = secret_key
+fake=Faker()
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///haven.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -213,6 +215,7 @@ class LoginUser(Resource):
             "id": f"{worker.id}",
             "email": worker.email,
             "title": worker.title,
+            "image": worker.image,
             "completed_jobs_average_rating": worker.get_details()['completed_jobs_average_rating'],
             "approved_jobs_total_amount": worker.get_details()['approved_jobs_total_amount'],
             "completed_jobs": worker.get_details()['completed_jobs'],
@@ -249,7 +252,6 @@ class OfferedJobs(Resource):
         db.session.commit()
         return make_response(
             jsonify({
-                'id': offered_job.id,
                 'title': offered_job.title,
                 'wage': offered_job.wage,
                 'hours': offered_job.hours
@@ -279,7 +281,8 @@ class ApprovedJobs(Resource):
             amount = data['amount'],
             worker_id = data['worker_id'],
             offered_job_id = data['offered_job_id'],
-            hours = data['hours']
+            hours = data['hours'],
+            progress = data['progress']
         )
 
         db.session.add(new_approved_job)
@@ -297,7 +300,7 @@ class ApprovedJobById(Resource):
         approved_job_data = {
             "id": approved_job.id,
             "title": approved_job.offered_job.title,
-            "amount": approved_job.amount,
+            "amount": approved_job.offered_job.hours,
             "progress": approved_job.progress,
             "hours": approved_job.hours,
         }
@@ -360,6 +363,23 @@ class UnapprovedBids(Resource):
             for bid in unapproved_bids
         ]
         return make_response(jsonify(unapproved_bids_list))
+    
+class ConcludedJobs(Resource):
+    def get(self):
+        concluded_jobs = ApprovedJob.query.filter(~ApprovedJob.completed_job.has(), ApprovedJob.progress == 100).all()
+
+
+        concluded_jobs_list = [
+            {
+                "id" : job.id,
+                "title" : job.offered_job.title,
+                "amount" : job.amount,
+                "hours" : job.offered_job.hours,
+                "contractor" : f"{job.worker.first_name} {job.worker.last_name}",
+            }
+            for job in concluded_jobs
+        ]
+        return make_response(jsonify(concluded_jobs_list))
 
     
 class BidById(Resource):
@@ -419,6 +439,23 @@ class CompletedJobs(Resource):
             for job in completed_jobs
         ]
         return make_response(jsonify(completed_jobs_list))
+    
+    def post(self):
+        pass
+        data = request.get_json()
+
+        new_completed_job = CompletedJob(
+            approved_job_id = data['approved_job_id'],
+            rating = data['rating'],
+            certificate = fake.random_int(100000, 999999),
+            paid = data['paid']
+            
+        )
+
+        db.session.add(new_completed_job)
+        db.session.commit()
+
+        return make_response(new_completed_job.to_dict(), 201)
 
 
 
@@ -431,6 +468,7 @@ api.add_resource(OfferedJobs, '/offered_jobs')
 api.add_resource(ApprovedJobs, '/approved_jobs')
 api.add_resource(ApprovedJobById, '/approved_jobs/<int:id>')
 api.add_resource(CompletedJobs, '/completed_jobs')
+api.add_resource(ConcludedJobs, '/concluded_jobs')
 api.add_resource(Bids, '/bids')
 api.add_resource(UnapprovedBids, '/unapproved_bids')
 api.add_resource(BidById, '/bids/<int:id>')

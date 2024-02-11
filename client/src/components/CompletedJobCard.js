@@ -1,6 +1,6 @@
 import React from "react";
 
-function CompletedJobCard({id, title, amount, paid, certificate}) {
+function CompletedJobCard({id, title, amount, paid, certificate, rating}) {
 
     return (
         <>
@@ -10,7 +10,8 @@ function CompletedJobCard({id, title, amount, paid, certificate}) {
                     <p className="card-text">ID: {id}</p>
                     <p className="card-text">Amount: $ {amount}.00</p>
                     <p className="card-text">Paid Status: {paid? "Yes":"No"}</p>
-                    <p className="card-text">Certificate {certificate}</p>
+                    <p className="card-text">Certificate: {certificate}</p>
+                    <p className="card-text">Rating: {rating}</p>
                 </div>
             </div>
         </>

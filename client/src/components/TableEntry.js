@@ -5,7 +5,7 @@ function TableEntry({ id, title, offered_amount, contractor_rating, contractor, 
     const bid_quality_points = 0.7 * contractor_rating + (offered_amount / amount * 30);
 
     const handleApproveBid = (event) => {
-        // Request to your backend to approve the bid
+        // Request to backend to approve bid
 
         // Function to find an object by its id
         
@@ -27,6 +27,7 @@ function TableEntry({ id, title, offered_amount, contractor_rating, contractor, 
                 hours : bidObject.hours,
                 worker_id : bidObject.worker_id,
                 offered_job_id : bidObject.offered_job_id,
+                progress: 0,
 
 
                 // Include any additional data you need to send to the backend

@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy.orm import validates
 
 db=SQLAlchemy()
 
@@ -21,6 +22,21 @@ class Worker(db.Model, SerializerMixin):
     offered_jobs = db.relationship('OfferedJob', secondary='worker_offered_job_association', back_populates='workers')
     approved_jobs = db.relationship('ApprovedJob', backref='worker', lazy=True)
     bids = db.relationship('Bid', backref='worker', lazy=True)
+
+    @validates('email')
+    def validate_email(self, key, address):
+        if '@' not in address:
+            raise ValueError("Not a valid email Address!")
+        return address
+    
+    @validates('phone')
+    def validate_phone(self, key, number):
+        if not str(number).isdigit():
+            raise ValueError("Phone number should only contain digits!")
+        if len(str(number)) != 10:
+            raise ValueError("Phone number should be 10 digits!")
+        return number
+
 
     def get_details(self):
         # Return full names and average rating of completed jobs
@@ -141,10 +157,19 @@ class CompletedJob(db.Model, SerializerMixin):
     approved_job = db.relationship('ApprovedJob', back_populates='completed_job', uselist=False, single_parent=True)
 
     def __repr__(self):
-        return f'<Completed job {self.id}, {self.paid}, {self.rating}, {self.certificate} >'
+        return f'<Completed job {self.id}, {self.paid}, {self.rating}, {self.certificate}, >'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'paid': self.paid,
+            'rating': self.rating,
+            'certicate': self.certificate,
+            'approved_job_id': self.approved_job.id,
+        }
 
 
-class ApprovedJob(db.Model):
+class ApprovedJob(db.Model, SerializerMixin):
     __tablename__ = 'approved_jobs'
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Integer)

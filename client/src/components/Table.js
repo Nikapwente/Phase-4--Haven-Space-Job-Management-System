@@ -15,6 +15,7 @@ function Table({ bidData, update }) {
                         <th scope="col">Contractor</th>
                         <th scope="col">Contractor Rating</th>
                         <th scope="col">Bid Quality Points</th>
+                        <th scope="col">Approve Job</th>
                     </tr>
                 </thead>
                 <tbody>
