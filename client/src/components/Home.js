@@ -58,6 +58,7 @@ function Home({ selectedUser }) {
     const handleItemClick = (item) => {
         setSelectedItem(item);
         // console.log(selectedUser);
+        setCounter(prevCounter => prevCounter + 1);
         console.log(activeUser);
         console.log(data);
         if (item == "Logout") {
@@ -194,7 +195,7 @@ function Home({ selectedUser }) {
                             {/* right column */}
                             {selectedItem === 'Jobs in Progress' && (
                                 <div className="ms-5 col-4 d-flex align-content-start flex-wrap" style={{ "width": "1000px" }}>
-                                    {activeUser.approved_jobs.map((item) => {
+                                    {data.approved_jobs.map((item) => {
                                         return <ApprovedJobCard
                                             key={item.id}
                                             id={item.id}
@@ -225,7 +226,7 @@ function Home({ selectedUser }) {
                             )}
                             {selectedItem === 'Completed Jobs' && (
                                 <div className="ms-5 col-4 d-flex align-content-start flex-wrap" style={{ "width": "1000px" }}>
-                                    {activeUser.completed_jobs.map((item) => {
+                                    {data.completed_jobs.map((item) => {
                                         return <CompletedJobCard
                                             key={item.id}
                                             id={item.id}
