@@ -21,7 +21,7 @@ Haven Spaces Jobs Management System Allows Contractors to :
 5. Update their profile details and also upload a profile picture.
 
 
-Personnel Managers are allow to:
+Personnel Managers are allowed the following priviliges:
 1. Post a new Job
 2. Views a list of bids, the bid quality and Approve a specific bid
 3. View concluded jobs (progress=100%), assign them a rating and mark them as complete.
