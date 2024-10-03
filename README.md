@@ -1,4 +1,5 @@
-npm install && npm start
+Client: npm install && npm start
+Server: pipenv shell > pip install > python3 app.py
 
 All passwords Set to 1234
 
